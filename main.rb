@@ -1,6 +1,5 @@
-require_relative 'lib/db/Cursor'
+require_relative 'lib/kvdb'
 
-cursor = KVDB::Cursor.new('tests/db.kv', 'rw')
+cursor = KVDB::Cursor.new('test/file/dba.kv')
 
-puts cursor.file_path
-puts cursor.actions
+puts cursor.is_newly_created
