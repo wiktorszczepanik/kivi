@@ -1,5 +1,5 @@
 module KVDB::Disk
-  # Used in cursor
+  # Used only in cursor
   # Get indexs from key value database file
   class Storage
     def initialize(file_path, actions)
