@@ -54,7 +54,7 @@ module KVDB
       @is_newly_created = false
     end
 
-    def actions(actions)
+    def put_actions(actions)
       put_allowed_actions(actions)
     end
 
