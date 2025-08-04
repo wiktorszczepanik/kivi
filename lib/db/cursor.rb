@@ -2,12 +2,10 @@ require 'pathname'
 require_relative '../kvdb'
 
 module KVDB
-
   # Represents a cursor for retrieval and manipulation key-value pairs in a Database.
   # Example usage:
   # kv_db = KVDB::Cursor.new('path/to/file.kv', 'rw')
   class Cursor
-
     ALLOWED_ACTIONS = %w[r w].freeze
     ALLOWED_EXT = %w[.kv .kvdb].freeze
 
@@ -30,25 +28,29 @@ module KVDB
     def to_s
       <<~HEREDOC
         KVDB Info:
-        Path:    #{@file_path ? @file_path : '(empty)'}
+        Path:    #{@file_path || '(empty)'}
         State:   #{@is_newly_created ? 'Created new' : 'Loaded exitsing'}
         Actions: #{@actions}
       HEREDOC
     end
 
     def create(*args)
-      raise Err::FlagsError, 'Incorrect number of flags.' unless args.length == 1 || args.length == 2
+      raise Err::FlagsError, 'Incorrect number of flags.' unless [1, 2].include?(args.length)
+
       _, _, full = base_file_path_validation(args[0])
       raise Err::PathError, 'File already exists.' if full.exist?
+
       put_file_path(args[0])
       put_allowed_actions(args[1]) if args.length == 2
       @is_newly_created = true
     end
 
     def load(*args)
-      raise Err::FlagsError, 'Incorrect number of flags.' unless args.length == 1 || args.length == 2
+      raise Err::FlagsError, 'Incorrect number of flags.' unless [1, 2].include?(args.length)
+
       _, _, full = base_file_path_validation(args[0])
       raise Err::PathError, 'File already exists.' unless full.exist?
+
       put_file_path(args[0])
       put_allowed_actions(args[1]) if args.length == 2
       @is_newly_created = false
@@ -67,7 +69,7 @@ module KVDB
 
     # Check if file paht exists
     def put_file_path(path)
-      dir, base, full = base_file_path_validation(path)
+      _, _, full = base_file_path_validation(path)
       if full.exist?
         @file_path = full
         @is_newly_created = false
@@ -83,7 +85,8 @@ module KVDB
       dir, base = full.split
       raise Err::PathError, 'Directories in path does not exists.' unless dir.exist?
       raise Err::PathError, 'Invalid extension.' unless ALLOWED_EXT.include?(base.extname)
-      return dir, base, full
+
+      [dir, base, full]
     end
 
     # Allowed actions are read & write
@@ -100,7 +103,5 @@ module KVDB
         end
       end
     end
-
   end
-
 end
