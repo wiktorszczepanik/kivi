@@ -4,14 +4,13 @@ module KVDB::HASH
   FNF_OFFSET = 0xcbf29ce484222325
 
   # Fowler–Noll–Vo hash function
-  def fnf1a(text)
+  def self.fnf1a(text)
     hash = FNF_OFFSET
     text.each_byte do |byte|
       hash ^= byte
       hash *= FNF_PRIME
     end
-
     hash
-    end
   end
+
 end

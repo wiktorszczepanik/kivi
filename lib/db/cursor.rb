@@ -34,6 +34,13 @@ module KVDB
       HEREDOC
     end
 
+    def put(key, value)
+
+    end
+
+    def get(key)
+    end
+
     def create(*args)
       raise Err::FlagsError, 'Incorrect number of flags.' unless [1, 2].include?(args.length)
 
@@ -102,6 +109,11 @@ module KVDB
           raise "\'#{char}\' is incorrect action type. Available are #{ALLOWED_ACTIONS}"
         end
       end
+      instance_of_storage(@actions) if @actions[0]
+    end
+
+    def instance_of_storage(actions)
+      @storage = KVDB::DISK::Storage.new(@file_path, actions) if actions[0] == true
     end
   end
 end
