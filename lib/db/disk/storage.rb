@@ -65,6 +65,7 @@ module KVDB::DISK
       header
     end
 
+    # TODO:
     def values_for_header(key, value)
       hash = KVDB::HASH.fnf1a(String(value))
       timestamp = Time.now.to_i
