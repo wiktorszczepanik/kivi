@@ -1,6 +1,5 @@
 module KVDB::STAND
   class Header
-
     SIZE = 24
     FORMAT = 'q<L<L<L<S<S<'.freeze
 
@@ -15,11 +14,15 @@ module KVDB::STAND
 
     TYPE = {
       Integer: 1,
-      Float: 2
-      String: 3,
+      Float: 2,
+      String: 3
       # ...
     }.freeze
 
+    DIRECTIVE = {
+      1 => 'q<',
+      2 => 'E'
+    }
     # ...
   end
 end

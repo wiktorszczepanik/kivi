@@ -17,9 +17,11 @@ module KVDB
       when 0 # Left defaults
       when 1
         put_file_path(args[0])
+        instance_of_storage if @actions[:read] == true
       when 2
         put_file_path(args[0])
         put_allowed_actions(args[1])
+        instance_of_storage if @actions[:read] == true
       else
         raise Err::FlagsError, 'Incorrect number of flags.'
       end
@@ -35,10 +37,15 @@ module KVDB
     end
 
     def put(key, value)
-
+      @storage.put_row_into_kivi(key, value)
     end
 
     def get(key)
+      @storage.get_row_from_kivi(key)
+    end
+
+    def test
+      @storage.positions_map
     end
 
     def create(*args)
@@ -109,11 +116,11 @@ module KVDB
           raise "\'#{char}\' is incorrect action type. Available are #{ALLOWED_ACTIONS}"
         end
       end
-      instance_of_storage(@actions) if @actions[0]
+      instance_of_storage if @actions[:read] == true
     end
 
-    def instance_of_storage(actions)
-      @storage = KVDB::DISK::Storage.new(@file_path, actions) if actions[0] == true
+    def instance_of_storage
+      @storage = KVDB::DISK::Storage.new(@file_path, @actions) if @actions[:read] == true
     end
   end
 end
