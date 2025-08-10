@@ -7,11 +7,9 @@ module KVDB::DISK
     attr_accessor :positions_map
 
     def initialize(file_path, actions)
-      if actions[:read] && actions[:write]
+      if actions[:read] || actions[:write]
         @file = File.open(file_path, 'a+b')
         @serialize = KVDB::CAST::Serializer.new
-      elsif actions[:read]
-        @file = File.open(file_path, 'rb')
       else
         raise Err::FlagsError, 'Minimum read flag is required, to put or get data.'
       end
@@ -25,15 +23,16 @@ module KVDB::DISK
       header = @positions_map[key]
       return '' if header.nil?
 
-      @file.seek(header.get_value_position)
+      @file.seek(header.value_position)
       value_bytes = @file.read(header.value_size)
       @deserialize.unpack(value_bytes)
     end
 
     def put_row_into_kivi(key, value)
-      header = KVDB::DB::Header.new(values_for_header(key, value))
-      header = increment_header(key, header)
-      row = @serialize.row(header, value)
+      hash, timestamp, key_size, value_size, key_type, vlaue_type = values_for_header(key, value)
+      header = KVDB::DB::Header.new(hash, timestamp, key_size, value_size, key_type, vlaue_type)
+      full_header = increment_header(key, header)
+      row = @serialize.row(full_header, value)
       @file.write(row)
       @file.flush
     end
@@ -41,7 +40,6 @@ module KVDB::DISK
     def init_positions
       while (row = @file.read(KVDB::STAND::Header::SIZE))
         header = KVDB::DB::Header.new(@deserialize.header(row))
-
         key_bytes = @file.read(header.key_size)
         value_bytes = @file.read(header.value_size)
         key = @deserialize.unpack(key_bytes)
@@ -55,25 +53,25 @@ module KVDB::DISK
 
     private
 
-    def increment_header(key, header)
-      header.add_key(key)
-      header.add_start_position(@position_in_file)
-      header.add_value_position(KVDB::STAND::Header::SIZE + header.key_size)
-      @positions_map[key] = header
-      row_size = header.get_value_position + header.value_size
-      @position_in_file += row_size
-      header
-    end
-
-    # TODO:
     def values_for_header(key, value)
       hash = KVDB::HASH.fnf1a(String(value))
       timestamp = Time.now.to_i
       key_type = key.class.to_s.to_sym
       value_type = value.class.to_s.to_sym
-      key_size = @serialize.pack(key, key_type)
-      value_size = @serialize.pack(value, value_type)
+      key_size = @serialize.pack(key, key_type).length
+      value_size = @serialize.pack(value, value_type).length
       [hash, timestamp, key_size, value_size, key_type, value_type]
     end
+
+    def increment_header(key, header)
+      header.add_key(key)
+      header.add_start_position(@position_in_file)
+      header.add_value_position(KVDB::STAND::Header::SIZE + header.key_size)
+      @positions_map[key] = header
+      row_size = header.value_position + header.value_size
+      @position_in_file += row_size
+      header
+    end
+
   end
 end

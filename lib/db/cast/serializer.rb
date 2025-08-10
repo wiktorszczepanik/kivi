@@ -1,26 +1,35 @@
 module KVDB::CAST
+
   # Casts data from Ruby types to binary format
   class Serializer
+
     def initialize
       @standard = KVDB::STAND::Header.new
     end
 
     def row(header, value)
-      [header.hash, header.timestamp, header.key_size, header.value_size, header.key_type, header.value_type,
-       header.key, value].pack(KVDB::STAND::Header::SIZE + key_size + value_size)
+      key_type_value = KVDB::STAND::Header::TYPE[header.key_type]
+      value_type_value = KVDB::STAND::Header::TYPE[header.value_type]
+      packed_kv = pack(header.key, header.key_type) + pack(value, header.value_type)
+      [header.hash, header.timestamp,
+       header.key_size, header.value_size,
+       key_type_value, value_type_value
+      ].pack(KVDB::STAND::Header::FORMAT) + packed_kv
     end
 
-    def pack(bytes, type)
+    def pack(data, type)
       case type
       when :Integer
-        bytes.pack('q<')
+        [data].pack('q<')
       when :Float
-        bytes.pack('E')
+        [data].pack('E')
       when :String
-        bytes.encode('utf-8')
+        data.encode('utf-8')
       else
         raise KVDB::Err::TypesError, 'Invalid datatype while packing.'
       end
     end
+
   end
+
 end

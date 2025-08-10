@@ -1,5 +1,7 @@
 module KVDB::STAND
+
   class Header
+
     SIZE = 24
     FORMAT = 'q<L<L<L<S<S<'.freeze
 
@@ -25,4 +27,5 @@ module KVDB::STAND
     }
     # ...
   end
+
 end

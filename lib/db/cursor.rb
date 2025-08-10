@@ -37,11 +37,19 @@ module KVDB
     end
 
     def put(key, value)
-      @storage.put_row_into_kivi(key, value)
+      if @actions[:write]
+        @storage.put_row_into_kivi(key, value)
+      else
+        raise KVDB::Err::FlagsError, 'Write action is missing. PUT action is not allowed.'
+      end
     end
 
     def get(key)
-      @storage.get_row_from_kivi(key)
+      if @actions[:read]
+        @storage.put_row_into_kivi(key, value)
+      else
+        raise KVDB::Err::FlagsError, 'Read action is missing. GET action is not allowed.'
+      end
     end
 
     def test
