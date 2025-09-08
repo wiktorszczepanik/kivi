@@ -3,9 +3,9 @@ module KVDB::STAND
   class Header
 
     SIZE = 24
-    FORMAT = 'q<L<L<L<S<S<'.freeze
+    FORMAT = 'QL<L<L<S<S<'.freeze
 
-    HASH = 8 # 0 -> q
+    HASH = 8 # 0 -> Q
     TIMESTAMP = 4 # 1 -> <L
 
     KEY_SIZE = 4 # 2 -> <L
@@ -29,8 +29,9 @@ module KVDB::STAND
     }.freeze
 
     DIRECTIVE = {
-      1 => 'q<',
-      2 => 'E'
+      1 => 'Q',
+      2 => 'E',
+      3 => 'A*'
     }
     # ...
   end

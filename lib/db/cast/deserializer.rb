@@ -17,13 +17,14 @@ module KVDB::CAST
     end
 
     def unpack(bytes, type)
+      # directive = KVDB::STAND::Header::DIRECTIVE[type]
       case type
       when :Integer
-        bytes.unpack1('q<')
+        bytes.unpack1('Q')
       when :Float
         bytes.unpack1('E')
       when :String
-        bytes
+        bytes.unpack1('A*')
       else
         raise KVDB::Err::TypesError, 'Invalid datatype while packing.'
       end

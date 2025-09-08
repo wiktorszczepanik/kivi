@@ -20,11 +20,12 @@ module KVDB::CAST
     def pack(data, type)
       case type
       when :Integer
-        [data].pack('q<')
+        [data].pack('Q')
       when :Float
         [data].pack('E')
       when :String
-        data.encode('utf-8')
+        [data].pack('A*')
+        # data.encode('utf-8')
       else
         raise KVDB::Err::TypesError, 'Invalid datatype while packing.'
       end

@@ -23,9 +23,9 @@ module KVDB::DISK
       header = @positions_map[key]
       return '' if header.nil?
 
-      @file.seek(header.value_position)
+      @file.seek(header.start_position + header.value_position)
       value_bytes = @file.read(header.value_size)
-      @deserialize.unpack(value_bytes)
+      @deserialize.unpack(value_bytes, header.value_type)
     end
 
     def put_row_into_kivi(key, value)
@@ -33,7 +33,6 @@ module KVDB::DISK
       header = KVDB::DB::Header.new(hash, timestamp, key_size, value_size, key_type, vlaue_type)
       full_header = increment_header(key, header)
       row = @serialize.row(full_header, value)
-      puts row
       @file.write(row)
       @file.flush
     end
@@ -46,8 +45,6 @@ module KVDB::DISK
         key = @deserialize.unpack(key_bytes, header.key_type)
         value = @deserialize.unpack(value_bytes, header.value_type)
 
-        puts KVDB::HASH.fnf1a(value)
-        puts header.hash
         unless KVDB::HASH.fnf1a(value) == header.hash
           raise KVDB::Err::CorruptionError, 'Invalid value.'
         end

@@ -46,7 +46,7 @@ module KVDB
 
     def get(key)
       if @actions[:read]
-        @storage.put_row_into_kivi(key, value)
+        @storage.get_row_from_kivi(key)
       else
         raise KVDB::Err::FlagsError, 'Read action is missing. GET action is not allowed.'
       end
