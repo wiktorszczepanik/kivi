@@ -33,19 +33,24 @@ module KVDB::DISK
       header = KVDB::DB::Header.new(hash, timestamp, key_size, value_size, key_type, vlaue_type)
       full_header = increment_header(key, header)
       row = @serialize.row(full_header, value)
+      puts row
       @file.write(row)
       @file.flush
     end
 
     def init_positions
       while (row = @file.read(KVDB::STAND::Header::SIZE))
-        header = KVDB::DB::Header.new(@deserialize.header(row))
+        header = KVDB::DB::Header.new(*@deserialize.header(row))
         key_bytes = @file.read(header.key_size)
         value_bytes = @file.read(header.value_size)
-        key = @deserialize.unpack(key_bytes)
-        value = @deserialize.unpack(value_bytes)
+        key = @deserialize.unpack(key_bytes, header.key_type)
+        value = @deserialize.unpack(value_bytes, header.value_type)
 
-        raise KVDB::Err::CorruptionError, 'Invalid value.' unless KVDB::HASH.fnf1a(value) == header.hash
+        puts KVDB::HASH.fnf1a(value)
+        puts header.hash
+        unless KVDB::HASH.fnf1a(value) == header.hash
+          raise KVDB::Err::CorruptionError, 'Invalid value.'
+        end
 
         header = increment_header(key, header)
       end

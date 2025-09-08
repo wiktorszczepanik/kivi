@@ -11,3 +11,5 @@ require_relative 'db/integrity/validate'
 
 require_relative 'err/path'
 require_relative 'err/flags'
+require_relative 'err/integrity'
+require_relative 'err/types'

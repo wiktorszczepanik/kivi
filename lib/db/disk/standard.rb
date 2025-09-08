@@ -21,6 +21,13 @@ module KVDB::STAND
       # ...
     }.freeze
 
+    TYPE_LOOKUP = {
+      1 => :Integer,
+      2 => :Float,
+      3 => :String
+      # ...
+    }.freeze
+
     DIRECTIVE = {
       1 => 'q<',
       2 => 'E'
