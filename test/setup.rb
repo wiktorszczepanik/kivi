@@ -5,7 +5,7 @@ require_relative '../lib/kvdb'
 
 module KVTEST
 
-  class BaseSetup < Test::Unit::TestCase
+  class Setup < Test::Unit::TestCase
 
     NEW_CORRECT_KVDB = 'file/new_correct_db.kv'.freeze
     OLD_CORRECT_KVDB = 'file/old_correct_db.kv'.freeze
