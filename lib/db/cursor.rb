@@ -1,11 +1,19 @@
 require 'pathname' # could not be resolved
-require_relative '../kvdb'
+require 'fileutils'
+require 'zlib'
+require 'stringio'
+
+require_relative '../kivi'
 
 module KVDB
   # Represents a cursor for retrieval and manipulation key-value pairs in a Database.
-  # Example usage:
-  # kv_db = KVDB::Cursor.new('path/to/file.kv', 'rw')
+  # Recommended usage:
+  # KVDB::Cursor.open('test/file/db1.kv', 'rw') do |cursor|
+  #   cursor.put(1, '11')
+  #   puts cursor.get(1)
+  # end
   class Cursor
+
     ALLOWED_ACTIONS = %w[r w].freeze
     ALLOWED_EXT = %w[.kv .kvdb].freeze
 
@@ -28,6 +36,14 @@ module KVDB
       end
     end
 
+    # Context manager section
+    def self.open(*args)
+      cursor = new(*args)
+      yield(cursor)
+    ensure
+      cursor.close
+    end
+
     def to_s
       <<~HEREDOC
         KVDB Info:
@@ -37,6 +53,7 @@ module KVDB
       HEREDOC
     end
 
+    # Puts key and value to database
     def put(key, value)
       raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise KVDB::Err::FlagsError, 'Write action is missing. PUT action is not allowed.' unless @actions[:write]
@@ -44,6 +61,11 @@ module KVDB
       @storage.put_row_into_kivi(key, value)
     end
 
+    def []=(key, value)
+      put(key, value)
+    end
+
+    # Get value
     def get(key)
       raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise KVDB::Err::FlagsError, 'Read action is missing. GET action is not allowed.' unless @actions[:read]
@@ -51,6 +73,11 @@ module KVDB
       @storage.get_row_from_kivi(key)
     end
 
+    def [](key)
+      get(key)
+    end
+
+    # Delete row in database per key
     def del(key)
       raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise KVDB::Err::FlagsError, 'Write action is missing. DEL action is not allowed.' unless @actions[:write]
@@ -58,17 +85,31 @@ module KVDB
       @storage.del_row_from_kivi(key)
     end
 
+    # Close the cursor
+    # Close method is NOT required if cursor is implemented with context manager
     def close
+      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+
       @status_closed = true
       begin
         @storage.close
       ensure
+        compress_file
         @file_path = nil
         @actions = { read: false, write: false }
       end
     end
 
+    # Required only if cursor is closed
+    def reopen(*args)
+      raise KVDB::Err::StatusError, 'Cursor is already open.' if @status_closed == false
+
+      initialize(*args)
+    end
+
+    # Create new kivi database file
     def create(*args)
+      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise Err::FlagsError, 'Incorrect number of flags.' unless [1, 2].include?(args.length)
 
       _, _, full = base_file_path_validation(args[0])
@@ -79,22 +120,51 @@ module KVDB
       @is_newly_created = true
     end
 
+    # Load existing kivi database file
     def load(*args)
+      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise Err::FlagsError, 'Incorrect number of flags.' unless [1, 2].include?(args.length)
 
       _, _, full = base_file_path_validation(args[0])
-      raise Err::PathError, 'File already exists.' unless full.exist?
+      raise Err::PathError, 'The file does not exist.' unless full.exist?
 
       put_file_path(args[0])
       put_allowed_actions(args[1]) if args.length == 2
       @is_newly_created = false
     end
 
+    # Set allowed actions per cursor / db
     def put_actions(actions)
+      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+
       put_allowed_actions(actions)
     end
 
     private
+
+    def compress_file(file_path = nil)
+      file_path ||= @file_path
+      original_data = File.binread(file_path)
+
+      buffer = StringIO.new
+      gz = Zlib::GzipWriter.new(buffer)
+      gz.write(original_data)
+      gz.close
+
+      File.binwrite(file_path, buffer.string)
+    end
+
+    def decompress_file(file_path = nil)
+      file_path ||= @file_path
+      compressed_data = File.binread(file_path)
+
+      buffer = StringIO.new(compressed_data)
+      gz = Zlib::GzipReader.new(buffer)
+      original_data = gz.read
+      gz.close
+
+      File.binwrite(file_path, original_data)
+    end
 
     def put_defaults
       @file_path = nil
@@ -107,6 +177,7 @@ module KVDB
       if full.exist?
         @file_path = full
         @is_newly_created = false
+        decompress_file
       else
         File.new(full, 'w').close
         @file_path = full
@@ -118,7 +189,7 @@ module KVDB
       full = Pathname.new(path)
       dir, base = full.split
       raise Err::PathError, 'Directories in path does not exists.' unless dir.exist?
-      raise Err::PathError, 'Invalid extension.' unless ALLOWED_EXT.include?(base.extname)
+      # raise Err::PathError, 'Invalid extension.' unless ALLOWED_EXT.include?(base.extname)
 
       [dir, base, full]
     end

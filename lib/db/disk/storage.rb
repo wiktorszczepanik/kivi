@@ -1,9 +1,10 @@
-require_relative '../../kvdb'
+require_relative '../../kivi'
 
 module KVDB::DISK
   # Used only in cursor
   # Get indexs from key value database file
   class Storage
+
     attr_accessor :positions_map
 
     def initialize(file_path, actions)
