@@ -12,6 +12,7 @@ module KVDB
     attr_accessor :file_path, :actions, :is_newly_created
 
     def initialize(*args)
+      @status_closed = false
       put_defaults
       case args.length
       when 0 # Left defaults
@@ -37,19 +38,34 @@ module KVDB
     end
 
     def put(key, value)
+      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise KVDB::Err::FlagsError, 'Write action is missing. PUT action is not allowed.' unless @actions[:write]
 
       @storage.put_row_into_kivi(key, value)
     end
 
     def get(key)
+      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise KVDB::Err::FlagsError, 'Read action is missing. GET action is not allowed.' unless @actions[:read]
 
       @storage.get_row_from_kivi(key)
     end
 
-    def test
-      @storage.positions_map
+    def del(key)
+      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KVDB::Err::FlagsError, 'Write action is missing. DEL action is not allowed.' unless @actions[:write]
+
+      @storage.del_row_from_kivi(key)
+    end
+
+    def close
+      @status_closed = true
+      begin
+        @storage.close
+      ensure
+        @file_path = nil
+        @actions = { read: false, write: false }
+      end
     end
 
     def create(*args)

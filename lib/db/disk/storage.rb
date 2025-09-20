@@ -8,7 +8,7 @@ module KVDB::DISK
 
     def initialize(file_path, actions)
       if actions[:read] || actions[:write]
-        @file = File.open(file_path, 'a+b')
+        @file = File.open(file_path, 'r+b') # orginal = 'a+b'
         @serialize = KVDB::CAST::Serializer.new
       else
         raise Err::FlagsError, 'Minimum read flag is required, to put or get data.'
@@ -29,12 +29,32 @@ module KVDB::DISK
     end
 
     def put_row_into_kivi(key, value)
+      del_row_from_kivi(key)
       hash, timestamp, key_size, value_size, key_type, vlaue_type = values_for_header(key, value)
       header = KVDB::DB::Header.new(hash, timestamp, key_size, value_size, key_type, vlaue_type)
       full_header = increment_header(key, header)
       row = @serialize.row(full_header, value)
       @file.write(row)
       @file.flush
+    end
+
+    def del_row_from_kivi(key)
+      header = @positions_map[key]
+      return '' if header.nil?
+
+      remaining_start = header.start_position +
+        header.value_position + header.value_size
+
+      @file.seek(remaining_start)
+      remaining_data = @file.read
+      @file.seek(header.start_position)
+      @file.write(remaining_data)
+      @file.truncate(@file.pos)
+
+      @positions_map.clear
+      @position_in_file = 0
+      @file.rewind
+      init_positions
     end
 
     def init_positions
@@ -52,6 +72,14 @@ module KVDB::DISK
         header = increment_header(key, header)
       end
     end
+
+    def close
+      @file.flush
+      @file.close
+      @positions_map.clear
+      @position_in_file = 0
+    end
+
 
     private
 
