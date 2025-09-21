@@ -1,4 +1,4 @@
-module KVDB::HASH
+module KIVI::HASH
   # for 64 bits
   FNF_PRIME = 0x00000100000001b3
   FNF_OFFSET = 0xcbf29ce484222325

@@ -1,4 +1,4 @@
-module KVDB::STAND
+module KIVI::STAND
 
   class Header
 

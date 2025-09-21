@@ -1,4 +1,4 @@
-module KVDB::Err
+module KIVI::Err
 
   class PathError < StandardError
 

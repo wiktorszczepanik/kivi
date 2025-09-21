@@ -1,4 +1,4 @@
-module KVDB::CAST
+module KIVI::CAST
 
   # Casts data from binary format to Ruby types
   class Deserializer
@@ -9,11 +9,11 @@ module KVDB::CAST
 
     def header(data)
       # header = data.unpack(@standard::FORMAT)
-      header = data.unpack(KVDB::STAND::Header::FORMAT)
+      header = data.unpack(KIVI::STAND::Header::FORMAT)
       # puts header[0]
       return [header[0], header[1], header[2], header[3],
-        KVDB::STAND::Header::TYPE_LOOKUP[header[4]],
-        KVDB::STAND::Header::TYPE_LOOKUP[header[5]]]
+        KIVI::STAND::Header::TYPE_LOOKUP[header[4]],
+        KIVI::STAND::Header::TYPE_LOOKUP[header[5]]]
     end
 
     def unpack(bytes, type)
@@ -26,7 +26,7 @@ module KVDB::CAST
       when :String
         bytes.unpack1('A*')
       else
-        raise KVDB::Err::TypesError, 'Invalid datatype while packing.'
+        raise KIVI::Err::TypesError, 'Invalid datatype while packing.'
       end
     end
 

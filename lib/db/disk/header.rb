@@ -1,4 +1,4 @@
-module KVDB::DB
+module KIVI::DB
   # Header attributes for database row
   class Header
 

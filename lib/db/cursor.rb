@@ -5,7 +5,7 @@ require 'stringio'
 
 require_relative '../kivi'
 
-module KVDB
+module KIVI
   # Represents a cursor for retrieval and manipulation key-value pairs in a Database.
   # Recommended usage:
   # KVDB::Cursor.open('test/file/db1.kv', 'rw') do |cursor|
@@ -55,8 +55,8 @@ module KVDB
 
     # Puts key and value to database
     def put(key, value)
-      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
-      raise KVDB::Err::FlagsError, 'Write action is missing. PUT action is not allowed.' unless @actions[:write]
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::FlagsError, 'Write action is missing. PUT action is not allowed.' unless @actions[:write]
 
       @storage.put_row_into_kivi(key, value)
     end
@@ -67,8 +67,8 @@ module KVDB
 
     # Get value
     def get(key)
-      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
-      raise KVDB::Err::FlagsError, 'Read action is missing. GET action is not allowed.' unless @actions[:read]
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::FlagsError, 'Read action is missing. GET action is not allowed.' unless @actions[:read]
 
       @storage.get_row_from_kivi(key)
     end
@@ -79,8 +79,8 @@ module KVDB
 
     # Delete row in database per key
     def del(key)
-      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
-      raise KVDB::Err::FlagsError, 'Write action is missing. DEL action is not allowed.' unless @actions[:write]
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::FlagsError, 'Write action is missing. DEL action is not allowed.' unless @actions[:write]
 
       @storage.del_row_from_kivi(key)
     end
@@ -88,13 +88,14 @@ module KVDB
     # Close the cursor
     # Close method is NOT required if cursor is implemented with context manager
     def close
-      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
 
       @status_closed = true
       begin
         @storage.close
+      rescue
       ensure
-        compress_file
+        compress
         @file_path = nil
         @actions = { read: false, write: false }
       end
@@ -102,14 +103,14 @@ module KVDB
 
     # Required only if cursor is closed
     def reopen(*args)
-      raise KVDB::Err::StatusError, 'Cursor is already open.' if @status_closed == false
+      raise KIVI::Err::StatusError, 'Cursor is already open.' if @status_closed == false
 
       initialize(*args)
     end
 
     # Create new kivi database file
     def create(*args)
-      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise Err::FlagsError, 'Incorrect number of flags.' unless [1, 2].include?(args.length)
 
       _, _, full = base_file_path_validation(args[0])
@@ -122,7 +123,7 @@ module KVDB
 
     # Load existing kivi database file
     def load(*args)
-      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
       raise Err::FlagsError, 'Incorrect number of flags.' unless [1, 2].include?(args.length)
 
       _, _, full = base_file_path_validation(args[0])
@@ -135,14 +136,14 @@ module KVDB
 
     # Set allowed actions per cursor / db
     def put_actions(actions)
-      raise KVDB::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
 
       put_allowed_actions(actions)
     end
 
     private
 
-    def compress_file(file_path = nil)
+    def compress(file_path = nil)
       file_path ||= @file_path
       original_data = File.binread(file_path)
 
@@ -154,7 +155,7 @@ module KVDB
       File.binwrite(file_path, buffer.string)
     end
 
-    def decompress_file(file_path = nil)
+    def decompress(file_path = nil)
       file_path ||= @file_path
       compressed_data = File.binread(file_path)
 
@@ -177,7 +178,7 @@ module KVDB
       if full.exist?
         @file_path = full
         @is_newly_created = false
-        decompress_file
+        decompress
       else
         File.new(full, 'w').close
         @file_path = full
@@ -211,7 +212,7 @@ module KVDB
     end
 
     def instance_of_storage
-      @storage = KVDB::DISK::Storage.new(@file_path, @actions) if @actions[:read] == true
+      @storage = KIVI::DISK::Storage.new(@file_path, @actions) if @actions[:read] == true
     end
   end
 end
