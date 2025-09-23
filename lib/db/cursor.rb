@@ -162,14 +162,16 @@ module KIVI
 
     def compress(file_path = nil)
       file_path ||= @file_path
-      original_data = File.binread(file_path)
+      unless file_path.nil?
+        original_data = File.binread(file_path)
 
-      buffer = StringIO.new
-      gz = Zlib::GzipWriter.new(buffer)
-      gz.write(original_data)
-      gz.close
+        buffer = StringIO.new
+        gz = Zlib::GzipWriter.new(buffer)
+        gz.write(original_data)
+        gz.close
 
-      File.binwrite(file_path, buffer.string)
+        File.binwrite(file_path, buffer.string)
+      end
     end
 
     def decompress(file_path = nil)

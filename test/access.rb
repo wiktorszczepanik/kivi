@@ -6,15 +6,21 @@ module KVTEST
 
   class Access < Test::Unit::TestCase
 
-    CORRECT_KIVI = 'file/correct_db.kv'.freeze
     TEST_VALUE_INT = 3
     TEST_VALUE_FLOAT = 3.14
     TEST_VALUE_STRING = 'PI'.freeze
     EMPTY = ''
 
     def setup
-      File.delete(CORRECT_KIVI)
-      @cursor = KIVI::Cursor.new(CORRECT_KIVI, 'rw')
+      timestamp = Time.now.strftime('%Y%m%d%H%M%S')
+      @kivi_file = "file/correct_access_testing_kivi_db_#{timestamp}.kv"
+      File.delete(@kivi_file) if File.exist?(@kivi_file)
+      @cursor = KIVI::Cursor.new(@kivi_file, 'rw')
+    end
+
+    def teardown
+      @cursor.close
+      File.delete(@kivi_file) if File.exist?(@kivi_file)
     end
 
     # Test key as int type
@@ -82,12 +88,12 @@ module KVTEST
       assert_equal EMPTY, @cursor.get('two')
     end
 
-    def test_key_string_and_value_string_
+    def test_key_string_and_value_string
       @cursor.put('three', TEST_VALUE_STRING)
       assert_equal TEST_VALUE_STRING, @cursor.get('three')
       @cursor.del('three')
       assert_equal EMPTY, @cursor.get('three')
     end
-  end
 
+  end
 end
