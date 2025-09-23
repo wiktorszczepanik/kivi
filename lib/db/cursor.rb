@@ -50,6 +50,7 @@ module KIVI
         Path:    #{@file_path || '(empty)'}
         State:   #{@is_newly_created ? 'Created new' : 'Loaded exitsing'}
         Actions: #{@actions}
+        Size:    #{size}
       HEREDOC
     end
 
@@ -83,6 +84,22 @@ module KIVI
       raise KIVI::Err::FlagsError, 'Write action is missing. DEL action is not allowed.' unless @actions[:write]
 
       @storage.del_row_from_kivi(key)
+    end
+
+    def keys
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::FlagsError, 'Read action is missing. KEYS action is not allowed.' unless @actions[:read]
+
+      @storage.positions_map.keys
+
+    end
+
+    # Getting size of the kivi file
+    def size
+      raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
+      raise KIVI::Err::FlagsError, 'Read action is missing. SIZE action is not allowed.' unless @actions[:read]
+
+      File.size(file_path)
     end
 
     # Close the cursor
