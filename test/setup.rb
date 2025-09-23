@@ -1,4 +1,5 @@
 require 'test/unit'
+require 'zlib'
 require 'pathname'
 
 require_relative '../lib/kivi'
@@ -13,6 +14,8 @@ module KVTEST
     CUSTOM_EMPTY_ACTIONS = ''.freeze
 
     @is_old_kivi_file_created = false
+    @@current_number_of_tests = 0
+    @number_of_tests = 13
 
     def setup
       timestamp = Time.now.strftime('%Y%m%d%H%M%S')
@@ -35,6 +38,10 @@ module KVTEST
 
     def teardown
       File.delete(@new_kivi_file) if File.exist?(@new_kivi_file)
+      @@current_number_of_tests += 1
+      if @number_of_tests == @current_number_of_tests
+        File.delete(@old_kivi_file) if File.exist?(@old_kivi_file)
+      end
     end
 
     # Empty
@@ -130,5 +137,4 @@ module KVTEST
     end
 
   end
-
 end
