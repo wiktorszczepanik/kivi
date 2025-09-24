@@ -39,6 +39,4 @@ KIVI::Cursor.open('test/file/db1.kv', 'rw') do |cursor|
   # New permissions
   cursor.put_actions('r') # Read only
 
-  cursor.close
-
 end
