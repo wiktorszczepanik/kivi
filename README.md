@@ -1,6 +1,6 @@
 ## Kivi
 
-Kivi is a single-file database written in Ruby that utilizes a hash table (key-value) structure. Data is stored on disk in binary format and compressed using gzip (*zlib*). Kivi offers a simple yet functional interaction with data, making it an ideal solution for small projects.
+Kivi is a single-file database written in Ruby that utilizes a hash table (key-value) structure. Data is stored on disk in binary format and compressed using gzip (*zlib*). Kivi offers a simple yet functional interaction with data, making it a great solution for small projects. Currently, Kivi supports the following types for keys and values: **Integer**, **Float**, and **String**.
 
 ### Usage
 
@@ -48,15 +48,6 @@ end
 ```
 > ⚠️ **Warning:** Please note that the structure of the above code (context manager) is the recommended form. You can connect to the database file without using a context manager; however, resources must be manually closed using the **.close** method. Failing to close the connection will result in a lack of compression, leading to issues when attempting to reconnect.
 
-### Supported Types
-
-Currently, Kivi supports the following types for keys and values:
-- Integer
-- Float
-- String
-
 ### Installation
 
-Currently, Kivi is not distributed as a gem. To use Kivi, clone the repository and load the `kivi.rb` file in your project.
-
-To verify that everything is working correctly, you can run the unit tests located in the `test/` directory.
+Currently, Kivi is not distributed as a gem. To use Kivi, clone the repository and load the `kivi.rb` file in your project. To verify that everything is working correctly, you can run the unit tests located in the `test/` directory.
