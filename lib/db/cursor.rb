@@ -151,6 +151,16 @@ module KIVI
       @is_newly_created = false
     end
 
+    # Deprecated
+    # def remove(*args)
+    #   raise Err::FlagsError, 'Incorrect number of flags.' unless args.length == 1
+    #   _, _, full = base_file_path_validation(args[0])
+    #   raise Err::PathError, 'The file does not exist.' unless full.exist?
+
+    #   File.remove(full)
+
+    # end
+
     # Set allowed actions per cursor / db
     def put_actions(actions)
       raise KIVI::Err::StatusError, 'Cursor already closed.' if @status_closed == true
