@@ -26,19 +26,4 @@ KIVI::Cursor.open('test/file/db1.kv', 'rw') do |cursor|
   # Size - number of bytes
   cursor.size
 
-  # Close cursor
-  # cursor.close
-
-  # Reopen already closed cursor
-  # cursor.reopen
-
-  # Create new .kv
-  # cursor.create('test/file/db2.kv', 'rw')
-
-  # Load existing .kv
-  # cursor.load('test/file/db1.kv', 'rw')
-
-  # New permissions
-  # cursor.put_actions('r') # Read only
-
 end
